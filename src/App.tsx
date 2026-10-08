@@ -380,7 +380,7 @@ function TaskRow({ task, onOpen, onDelete }: { task: Task; onOpen: (task: Task) 
 
 function App() {
   const demoAccount = useDemoAccount()
-  const [appMode, setAppMode] = useState<AppMode>(()=>new URLSearchParams(location.search).get('view')==='admin'?'admin':['twin','assistant'].includes(new URLSearchParams(location.search).get('view')||'')?'assistant':'task')
+  const [appMode, setAppMode] = useState<AppMode>(()=>{ const view = new URLSearchParams(location.search).get('view') || 'twin'; return view === 'admin' ? 'admin' : ['twin','assistant'].includes(view) ? 'assistant' : 'task' })
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [taskSidebarOpenBeforeAssistant, setTaskSidebarOpenBeforeAssistant] = useState(true)
   const [sidebarMode, setSidebarMode] = useState<'default' | 'notifications'>('default')
@@ -397,7 +397,7 @@ function App() {
   const [assistantBusy, setAssistantBusy] = useState(false)
   const [assistantWorkspaceVisible, setAssistantWorkspaceVisible] = useState(false)
   const [assistantDestination, setAssistantDestination] = useState<AssistantDestination>(() => {
-    const view = new URLSearchParams(location.search).get('view')
+    const view = new URLSearchParams(location.search).get('view') || 'twin'
     if (view === 'twin') return { type: 'feature', featureId: 'training' }
     if (view === 'a2a') return { type: 'feature', featureId: 'a2a' }
     return { type: 'assistant' }

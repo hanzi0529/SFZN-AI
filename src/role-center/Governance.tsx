@@ -816,7 +816,7 @@ export function Evolution({
   );
 }
 
-export function PersonalLogs() {
+export function PersonalLogs({ showPrepareTask = true }: { showPrepareTask?: boolean } = {}) {
   const store = useRoleStore();
   const [feedbackFilter, setFeedbackFilter] = useState(""),
     [query, setQuery] = useState(""),
@@ -824,7 +824,7 @@ export function PersonalLogs() {
     [causeFilter, setCauseFilter] = useState(""),
     [start, setStart] = useState(""),
     [end, setEnd] = useState(""),
-    [reason, setReason] = useState(CAUSES[0]),
+    [reason, setReason] = useState(""),
     [taskOpen, setTaskOpen] = useState(false),
     [prompt, setPrompt] = useState("");
   const { perform, feedback } = useFeedback();
@@ -862,7 +862,7 @@ export function PersonalLogs() {
           </p>
         </div>
         <div className="rc-actions">
-          {!isNewDemoUser() && <button
+          {showPrepareTask && !isNewDemoUser() && <button
             onClick={() => {
               setTaskOpen(true);
               setPrompt("");
@@ -944,6 +944,7 @@ export function PersonalLogs() {
               <th>任务</th>
               <th>参与岗位</th>
               <th>状态 / 反馈</th>
+              <th>问题归因</th>
               <th>时间</th>
               <th>操作</th>
             </tr>
@@ -981,10 +982,29 @@ export function PersonalLogs() {
                       {r.feedback === "good"
                         ? "有帮助"
                         : r.feedback === "bad"
-                          ? "有问题 · " + r.cause
+                          ? "有问题"
                           : "未评价"}
                     </em>
                   </span>
+                </td>
+                <td className="rc-log-cause">
+                  {r.feedback === "bad" ? (
+                    <select
+                      aria-label={`${r.summary}的问题归因`}
+                      value={r.cause}
+                      onChange={(e) =>
+                        perform(
+                          () => actions.feedback(r.id, "bad", e.target.value),
+                          "已更新问题归因",
+                        )
+                      }
+                    >
+                      <option value="">待选择</option>
+                      {CAUSES.map((c) => (
+                        <option key={c}>{c}</option>
+                      ))}
+                    </select>
+                  ) : null}
                 </td>
                 <td>
                   <small className="rc-log-time">{r.at}</small>
@@ -994,7 +1014,7 @@ export function PersonalLogs() {
                     className="rc-link"
                     onClick={() => {
                       setDetailId(r.id);
-                      setReason(r.cause || CAUSES[0]);
+                      setReason(r.cause);
                     }}
                   >
                     查看详情
@@ -1061,17 +1081,22 @@ export function PersonalLogs() {
                 >
                   有帮助
                 </button>
-                <select
-                  aria-label="反馈问题原因"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                >
-                  {CAUSES.map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
+                <label className="rc-inline-label">
+                  问题归因
+                  <select
+                    aria-label="问题归因"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                  >
+                    <option value="">待选择</option>
+                    {CAUSES.map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
                 <button
                   className={selected.feedback === "bad" ? "rc-danger" : ""}
+                  disabled={!reason}
                   onClick={() =>
                     perform(
                       () => actions.feedback(selected.id, "bad", reason),

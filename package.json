@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:standalone": "npm run build && node scripts/build-standalone.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "node scripts/test-role-center.mjs"

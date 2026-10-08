@@ -39,7 +39,7 @@ export function withExecutiveDemo(store: Store): Store {
     store.roles.push({ id: config.id, published, versions: [structuredClone(published)], disabled: false, updatedAt: published.publishedAt });
   }
   store.memberships[CURRENT_USER] = configs.map(config => ({ roleId: config.id, enabled: true, addedAt: '2026-09-15 09:00:00' }));
-  store.personal[CURRENT_USER] = { ids: [], disabled: [], grants: [] };
+  store.personal[CURRENT_USER] = { ids: ['gm-project-expert', 'gm-finance-expert', 'gm-progress-query', 'gm-business-brief', 'gm-project-platform', 'gm-finance-platform'], disabled: [], grants: [] };
   return withExecutiveHistory(store);
 }
 

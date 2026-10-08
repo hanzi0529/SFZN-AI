@@ -194,13 +194,7 @@ function audit(
   });
   if (role) role.updatedAt = stamp();
 }
-/**
- * 记一个成长点。
- *
- * 成长曲线的语义是「岗位 / 能力 / 画像 / 知识**发生了补齐**」，
- * 不是操作日志 —— 同一天里标题与说明都一样的重复操作，只算一个成长点。
- * 否则反复点「重新评测」这类动作会堆出一串完全相同的事件。
- */
+/** Record each actual configuration change; the curve may rise or fall. */
 function growth(
   store: Store,
   title: string,
@@ -208,14 +202,6 @@ function growth(
   type = "岗位智能体",
 ) {
   const at = stamp();
-  const day = at.slice(0, 10);
-  const duplicated = store.growth.some(
-    (item) =>
-      item.at.slice(0, 10) === day &&
-      item.title === title &&
-      item.detail === detail,
-  );
-  if (duplicated) return;
   store.growth.unshift({
     id: uid("growth"),
     userId: CURRENT_USER,
@@ -250,6 +236,21 @@ function rememberEvaluation(role: RoleAgent) {
   ];
 }
 export const actions = {
+  twinKnowledgeSelection(name: string, enabled: boolean) {
+    transaction((s) => growth(s, `${enabled ? "启用" : "停用"}知识库：${name}`, "当前分身检索范围已更新。", "知识库"));
+  },
+  twinSelectResource(id: string, selected: boolean) {
+    transaction((s) => {
+      const resource = s.resources.find((item) => item.id === id);
+      required(resource, "资源不存在");
+      const personal = s.personal[CURRENT_USER] || { ids: [], disabled: [], grants: [] };
+      personal.ids = selected
+        ? [...new Set([...personal.ids, id])]
+        : personal.ids.filter((item) => item !== id);
+      s.personal[CURRENT_USER] = personal;
+      growth(s, `${selected ? "配置" : "移除"}${resource.name}`, "个人分身能力选择已更新。", resource.kind === "skill" ? "技能" : resource.kind === "mcp" ? "MCP" : "专家");
+    });
+  },
   profileGrowth(title: string) {
     transaction((s) =>
       growth(s, title, "个人画像、知识或评测记录已更新。", "岗位画像"),
